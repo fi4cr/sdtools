@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>SD Toolset</title>
+  <link rel="stylesheet" href="style.css">
+  <script src='https://cdn.plot.ly/plotly-2.16.1.min.js'></script>
+</head>
+
+<body>
+  <div>
+    <div>
+      <div class="column">
+        <div id="myDiv">
+        </div>
+      </div>
+      <div class="column">
+        <div class="container">
+          <button id="back-button">Back</button>
+          <h2 id="titleDiv">SDTools</h2>
+          <div id="contentDiv">There are plenty of pages explaining how stable diffusion works. This is essentially a mini wiki or cheat sheet. Clicking on a segment provides a very brief explanation and relevant links.<br><br> The purpose of
+            this mini wiki is to address this simple problem: <br> Why am I unable to generate the exact image I want?
+            <br> What tools could help me reach my goal? <br> <br> This page introduces you to some tools you may find
+            helpful in crafting your images. The focus is on how to obtain what you want rather than how it works.  There
+            is so much good ressources out there that we try to mostly point to it, with a few filler text here and
+            there. <br> <br> NB: Bigger area does not mean more important! We have plenty of gaps in what we capture, things are moving so fast! Thank you to many on reddit who have made suggestions, keep them coming!</div>
+          <br>
+        </div>
+        <div id="plot">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    content = ["There are plenty of pages explaining how stable diffusion works. This is essentially a mini wiki or cheat sheet. Clicking on a segment provides a very brief explanation and relevant links. <br><br> The purpose of this mini wiki is to address this simple problem: <br> Why am I unable to generate the exact image I want? <br> What tools could help me reach my goal? <br> <br> This page introduces you to some tools you may find helpful in crafting your images. The focus is on how to obtain what you want rather than how it works. There is so much good ressources out there that we try to mostly point to it, with a few filler text here and there. <br> <br> NB: Bigger area does not mean more important! We have plenty of gaps in what we capture, things are moving so fast! Thank you to many on reddit who have made suggestions, keep them coming!",
+      "After a while, you realise that what you want to get out of your mind and into the image just does not seem to exist in the model. This is where you set about to capturing concepts. These concepts can be styles or can be objects. There are a wide variety of ways of capturing concepts descrbied here for later use during image creation.",
+      "At its core we have the stable diffusion model (your ckpt file) which itself contains 3 models VAE (the bit that squish and unsquish the image into a tiny latent space), Unet (the bit that does the diffusion) and CLIP (the bit that guides the diffusion with text prompts). Different models will use different Unet, they will often use different VAE and may use different CLIP models. In addition, we have a range of way to perform the denoising in different samplers.",
+      "This is about those finishing touches so that the image can be displayed. If there are issues with faces we will fix theses with face restoration. When we are happy, we will upscale (and SD upscale as it is DA best) until desired image size. We may even do a bit of inpainting after that just to touch up small details after upscaling.",
+      "This is about editing the composition until we are happy with it. We start from an image we previously created and either expand it (outpainting) or modify it (inpainting) or find alternate images with img2img.",
+      "ControlNet can control diffusion with additional input conditions. This allow much better control over the general composition than conventional img2img. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://www.reddit.com/r/StableDiffusion/comments/119o71b/a1111_controlnet_extension_explained_like_youre_5/?utm_name=androidcss'>Control net explainer</a> <br> <br>",
+      "First we initiate the composition. We could do this with broad brushstrokes or pencil (then img2img). Here we show how to do it with text2img.",
+         "So with text2image you have no control over the composition and with image2image you have some control but not so much. This is about capturing the composition of an image to use it later in a ControlNet model trained with such image.  <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://www.reddit.com/r/StableDiffusion/comments/119o71b/a1111_controlnet_extension_explained_like_youre_5/?utm_name=androidcss'> Control net explainer</a> <br> <br>",
+      "Most of the time, you will be producing images that are 512x512 or 768x768. This is so you can produce many images very quickly and also because your graphic card or cloud GPU cannot handle producing huge 2048x2048 images. But say you want to do a printout of the images, they will look super pixalated. How do you solve that? By upscaling. Upscaling allows to increase the resolution. You can find heaps of upscaling models on the <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> upscale Wiki Model Database </a>",
+      "Sometimes the base models (1.4, 1.5, 2.0, 2.1....) or custom models just do not cut it for what you want to do. You want to use a particular subject or style that you can't seem to get by just typing prompts in text2images. An option is to finetune the model to your particular requirement.",
+      "Sometimes the base models (1.4, 1.5, 2.0, 2.1....) or custom models just do not cut it for what you want to do. You want to use a particular subject or style that you can't seem to get by just typing prompts in text2images. This is when you can train the model. You can train it to a subject (say your cat, your house or yourself) or a style (say Pop Art). Once you have train the model with images of this subject or style instance, you can use it to generate exactly what you want to.",
+      "In Image2Image, instead of starting with a noise image we start with an existing image and add some noise to it, before denoising it again. The resulting image is close to the initial image. The denoising strength controls how different the resulting image is to the initial image.",
+      "Text2Image, you input text, you get an image. <br> <br> Find out the crux of how this works here: <br> <a target='_blank' id='links' href='https://www.youtube.com/watch?v=1CIpzeNxIhU'> Computerphile: How Stable Diffusion Works </a>. <br> From the original <a target='_blank' id='links' href='https://arxiv.org/pdf/2112.10752.pdf'>paper</a>.",
+      "Use Image2text when you want to find out what prompts could be contained in an image or when you want to programatically label data for training.",
+      "Why do we need different samplers? We start with a complete noise image. At each steps, we denoise the image a little bit. Solving this problem equates to solving a bunch of discretised differential equations. The different samplers are just different methods to solve differential equations. The two classic methods Euler and Heun date back to more than a century. They are quite slow so you may as well use faster newer ones that produce the same results (like LMS, PLMS, DPM2, DDIM and DPM++). Some other methods like DDIM, DPM and DPM2 are relatively new, they are neural network based method of solving this. Euler and Heun are single step method (the next image depends only on the previous image), while other methods are multi steps methods (LMS, PLMS). All samplers can come in an Ancestral flavour. That essentially means that at each time step a little bit of noise is added. Because noise is added, Ancestral samplers do not converge to an image like other samplers do, they simply keep on giving new images with increasing number of steps. Additionaly samplers like DPM Adapative and DPM Fast (which is not fast) do not converge either. <br> Speed matters a lot when we are doing big batches of images. But don't be fooled by study which compare the number of steps of different samplers before they generate a decent image. The number of steps does not correlate with the time it takes when comparing different samplers. Some samplers are super slow and some super fast. E.g. DPM++ converges in a very low number of steps but for each step it is a bit longer than other samplers. Anyway do your own timing tests. The bottomline is that there are heaps of samples, many giving the same images as the DPM++ samplers for much longer computation times. It is hard to justify using anything else than the DPM++ samples. The exception is obviously the ancestral samplers Euler A which is so good that we can not not use it.<br> <a target='_blank' id='links' href='https://www.youtube.com/watch?v=gtr-4CUBfeQ'> One study on samplers</a> <br> <br> <img style='width: 25%; height: 25%' src='Samplers.png' alt='Samplers'>",
+      "Often after Creating images some images, we need to perform restorations to fix some details. This can be to sharpen the image like when doing upscaling or this can be to fix faces.",
+      "How do you mix two concepts together? How do you put two styles or objects together? If they are embeddings or hypernetwork you can use them at the same time. E.g. you can use two or more embeddings at the same time. You can use two or more hypernetworks at the same time. If they are checkpoints you have to merge them together.",
+      "What is it? If you were to diffuse the pixel image directly it would be stupidly VRAM hungry. So we do it in latent space. For this we use a VAE. It's an encoder and decoder. VAE or the encoder decoder is the bit that squish the images into a tiny space, which makes the diffusion a lot less VRAM hungry. <br> What does it do? It encodes the pixel image, to make it small, diffuse, then decode it. It's a pixel image again! This diffuson process is also meant to be more stable (stable diffusion). <br> When should you use it? You always use it. A ckpt file is a Unet, a VAE and a CLIP model. You use a decoder to pull the image from latent space.  <br> When should you use the non standard VAE (as not used the one that came with your model)? If you are doing faces with 1.5, you should probably use the alternate VAE. For instance see the comparisons in the link below. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://huggingface.co/stabilityai/sd-vae-ft-ema#visual'>Original vs EMA vs MSE VAE</a>",
+      "There are a range of models, from the official ones trained on billions of images (LAION-2B, 2billion images, LAION-5B 5.6 billion images...) to the community models based on the official models finetuned for a specific style or object. Some people tune the Unet and decoder, some just tune the Unet.",
+      "Latent space is huge, how can you get the image you want from there? There are a few ways to explore it including using brute force on a small part near your optimum solution or using random words or parameters.",
+      "This is when we will use the image caption (as opposed to a single token for all images) to perform the fine tuning. The advantage is that it allows for multi concept training. It is more work though.",
+      "This is when we will use a single token (as opposed to caption for all images) to perform the fine tuning. The advantage is that it is easier as you don't have to caption all images and less can go wrong.",
+      "LORA is another way to train to a particular subject or style. The advantage of LORA over Dreambooth is that it only take 6GB of VRAM to run and it only produce two small files of 6MB. The disavantage is that it is a lot less flexible than Dreambooth and it focuses more on faces. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/cloneofsimo/lora'>LORA Repo</a> <br> <br> Try it on Hugginface: <br> <a target='_blank' id='links' href='https://huggingface.co/spaces/ysharma/Low-rank-Adaptation'>LORA Hugginface Demo</a> <br> <br> See also Parameter Efficient Fine Tuning (PEFT). <br> <br> Further ressource: <br> <a target='_blank' id='links' href='https://github.com/huggingface/peft'>PEFT github project</a>",
+      "Hypernetwork is sort of a way to train a model without chaging its weights. Sounds impossible right? But here after the image has been created, the hypernetwork comes in, another small network that modifies the images a certain way.",
+      "Textual Inversion does not change the model weights but simply creates an embedding; a new keyword that represents data the model already knows. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/rinongal/textual_inversion'>Textual Inversion Paper</a> <br> <br> Try it on colab: <br> <a target='_blank' id='links' href='https://colab.research.google.com/github/huggingface/notebooks/blob/main/diffusers/stable_diffusion_textual_inversion_library_navigator.ipynb'>Textual Inversion Colab</a>",
+      "Img2Img is essentially instead of starting with a pure noise image, you start with an already existing image, add some noise and then denoise it back. This is a way to obtain a similar yet different image that depends on the prompt you use. The higher the denoising strength, the more different the image obtained will be.",
+      "Depth2Image essentially does img2img but also taking into account the depth. The depth is estimated using the monocular depth estimator MIDAS. The great thing about depth2image is that it preserves composition much better than img2img. < style='width: 25%; height: 25%' src='depthmap.png' alt='Depth Map'>",
+      "Prompts are the keywords you provide stable diffusion to guide the process. They come in two flavours: positive prompts and negative prompts. There are a number of ways to manipulate and edit prompt such as imgwith prompt emphasis, prompt delay or alternating words. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Features'>Webui wiki</a> <br> You can find prompt inspiration from:   <br> <a target='_blank' id='links' href='https://libraire.ai/'>libraire.ai</a>    <br> <a target='_blank' id='links' href='https://lexica.art/'>lexica.art</a>   <br> <a target='_blank' id='links' href='https://www.krea.ai/'>krea.ai</a>   <br> <a target='_blank' id='links' href='https://prompthero.com/'>prompthero.com</a>   <br> <a target='_blank' id='links' href='https://openart.ai/'>openart.ai</a>   <br> <a target='_blank' id='links' href='https://pagebrain.ai/promptsearch/'>pagebrain.ai</a>",
+      "Sometimes you want to find the words to describe an image or you want to caption a set of image for training. This is where Image2text comes in.",
+      "CLIP Interrogator allows you to find the prompts that best describe an existing image. This is helpful in crafting your own prompts. This is also useful programatically labelling images whilst training. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/pharmapsychotic/clip-interrogator'>CLIP Interrogator</a> <br> <br> Try it here: <br> <a target='_blank' id='links' href='https://huggingface.co/spaces/pharma/CLIP-Interrogator'>CLIP Interrogator Gradio Demo</a>",
+      "BLIP Image Captioning allows you to find the prompts that would best describe an existing image. This is helpful in crafting your own prompts. This is also useful programatically labelling images whilst training. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://ahmed-sabir.medium.com/paper-summary-blip-bootstrapping-language-image-pre-training-for-unified-vision-language-c1df6f6c9166'>BLIP Image Captioning</a> <br> <br> Try it: <br> <a target='_blank' id='links' href='https://huggingface.co/spaces/Salesforce/BLIP'>BLIP Gradio Demo</a>",
+      "Prompt Weighting can be used in several interfaces for stable diffusion. The syntax is (Salvador Dali:1.1), where here I give a weight of Salvador Dali of 1.1 compared to pixel art of 1. <br> <br> <img style='width: 95%; height: 95%' src='PromptWeighting.png' alt='Prompt Weighting'>",
+      "Prompt Delay can be used in several interfaces of stable diffusion. It delays a keywords up to a number of steps. The syntax is as such [Salvador Dali:Pixel Art:0.2], where her Salvador Dali is used for 20% of the process and Pixel Art is used for the remaining 80%. <br> <br> <img style='width: 95%; height: 95%' src='PromptDelay.png' alt='Prompt Delay'>",
+      "Alternating Words can be used in Auto1111. Here two keywords are alternated at each steps. For instance, with the syntax [Salvador Dali|Pixel Art], we alternate between Salvador Dali and Pixel Art at each time step. <br> <br> <img style='width: 95%; height: 95%' src='AlternatingWords.png' alt='Alternating Words'>",
+      "Negative Prompts are what you want the model to avoid. Many negative prompts have some kind of impacts. Some meaningless gibberish negative prompts have more impact than meaningful ones. It is really hard to say what negative prompts do or whether they will work without brute forcing them. When you specifically mention too many hands or arms in the negative prompt, they will sometimes be removed from the frame altogether. <br> <br> <img style='width: 95%; height: 95%' src='NegativePrompt.png' alt='Negative Prompt'>",
+      "Text based editing",
+      "InstructPix2Pix is a way to tell stable diffusion what to change. Say you have a really nice scenery, but you change your mind and want the field to be a forest. Just ask, 'Change the field to a forest'.  <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/timothybrooks/instruct-pix2pix'>InstructPix2Pix</a>",
+      "Imagic <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/ShivamShrirao/diffusers/tree/main/examples/imagic'> Imagic Repo </a>",
+      "Loopback is when you feed the output of image2image to the next round of image2image. Why would you want to do that? Why not just do a longer image2image? What is the difference? Here you can adjust the denoising strenght factor between each run. So you can progressively reduce the amount of changes between images.",
+      "Inpainting allows you to change small details within your composition. Say you are doing a scenery and want to change part of a river, you can inpaint it until you get what you want. Same if you are doing a character and want to change the hands or add a hat, you can inpaint it.",
+      "Outpainting allows you to extend the frame of your image. Say you get a really nice character but you want to zoom out to show it within a scenergy. You can slowly outpaint the entire scenery. You will end up with a highly detailed character within a consistent landscape.",
+      "Img2Img is so versatile. If you like the general composition of the image but want change the details just img2img it with a lowish denoising strength. If you want to change it a lot more just use a higher denoising strength.",
+      "You can tune a new checkpoint based on a single token that represents all your images e.g. mycat. You may tune just the Unet or both the Unet and decoder. This will require at least 15GB VRAM and will produce a file from 2GB to 5GB. Dreambooth allows you to tune the models weights to a particular set of images. The key difference between dreambooth and more traditional fine tuning is that in dreambooth you don't need to caption the images. You just need to use a keyword that describes all images, for example, mycatlala. You have to prepare 20+ images (usually in a square format 512x512 or 768x768) and then fine tune a stable diffusion checkpoint on it. This will require a lot of VRAM (typically above 15GB) and will produce a file from 2GB to 5GB. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://dreambooth.github.io/'>Dreambooth Paper</a> <br> <br> Try it on colab: <br> <a target='_blank' id='links' href='https://colab.research.google.com/github/TheLastBen/fast-stable-diffusion/blob/main/fast-DreamBooth.ipynb'>Dreambooth Colab</a> <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://www.youtube.com/watch?v=7m__xadX0z0'>Guide from Aitrepreneur</a>",
+      "You can tune a new checkpoint based on image captions. You may tune just the Unet or both the Unet and the decoder. This will require at least 15GB VRAM and will produce a file from 2GB to 5GB. You can use conventional dreambooth codes to do this but only the ones where you have the option to use caption not tokens for the fine tuning. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/victorchall/EveryDream-trainer'>Every Dream Trainer</a>",
+      "Merging Checkpoints allows you to mix two models together. You don't have to mix 50/50, you can mix anywhere from 0% to 100%. You can produce amazing new styles by merging models. ",
+      "Training your hypernetwork is easy using Auto1111. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://www.youtube.com/watch?v=1mEggRgRgfg'>Guide from Aitrepreneur</a>",
+      "You can use multiple hypernetwork at once! <br> <br> Further ressourcesf: <br> <a target='_blank' id='links' href='https://github.com/antis0007/sd-webui-multiple-hypernetworks'>Multiple hypernetworks</a> <br> <br> ",
+      "LORA is another way to train to a particular subject or style. The advantage of LORA over Dreambooth is that it only take 6GB of VRAM to run and it only produce two small files of 6MB. The disavantage is that it is a lot less flexible than Dreambooth and it focuses more on faces. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/cloneofsimo/lora'>LORA Repo</a> <br> <br> Try it on Hugginface: <br> <a target='_blank' id='links' href='https://huggingface.co/spaces/ysharma/Low-rank-Adaptation'>LORA Hugginface Demo</a>",
+      "You can train an embedding from just a couple of photos (5-10). <br> <br> <a target='_blank' id='links' href='https://www.youtube.com/watch?v=7OnZ_I5dYgw'> Guide from Aitrepreneur </a>",
+      "You can use multiple embeddings at the same time. Just keep adding the different keywords of your embedding to your prompt.",
+      "A negative embedding is an embedding that you will use as a negative prompt. For instance, there is a bad-art negative embedding. That negative embedding is useful to avoid low artistic aspects to creep up in your generated images.",
+      "With a depth map you can start doing some interesting post processing, like videos. <br> <br> Script: <br> <a target='_blank' id='links' href='https://github.com/thygate/stable-diffusion-webui-depthmap-script'>Depth Map Script for Auto1111</a> <br> <br> <video width='320' height='240' loop autoplay> <source src='depthmap.mp4' type='video/mp4'> > Your browser does not support the video tag. </video>",
+      "Depth Preserving. Say you want to cortoonize a photo you have. If you put it in conventional image2image, with a prompt saying drawing of a person riding a bike, it will change completely the phot. It won't keep the proportions and the bike and the rider will move. Not so with depth preserving img2img. Here you will get exactly the same place as in the photo. This allows to create great variations whilst keeping your composition. In the one below, I asked for Moses getting a message from the cloud on his tablet. It keeps everything exaclty where they are but change the stone tablet to a modern tablet. <img style='width: 50%; height: 50%' src='moses.png' alt='Play of word on Moses'>",
+      "Ramacri is a really nice model for upscaling. <br> <br> <img style='width: 95%; height: 95%' src='remacri.png' alt='Remacri'> <br> Download Remacri from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> Upscale Wiki Model Database </a> <br> <br> RealESRGAN is an algorithm based on ESRGAN. <br> <br> <img style='width: 95%; height: 95%' src='resergan.png' alt='R-ESRGAN'> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/xinntao/Real-ESRGAN'>Real ESRGAN</a> <br> Try it here: <br> <a target='_blank' id='links' href='https://huggingface.co/spaces/akhaliq/Real-ESRGAN'>Real-ESRGAN Gradio Demo</a> <br> <br> ESRGAN is a great model for upscaling. <br> Download ESRGAN from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Official_Research_Models'> Official Research Model Database </a>  <br> <br> Lollypop is a really nice model for upscaling. <br> <br> <img style='width: 95%; height: 95%' src='lollypop.png' alt='Lollypop'> <br> Download Lollypop from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> Upscale Wiki Model Database </a> <br> <br> I like Universal Upscaler. I like it even more as most upscalers finished up with light touch of SD upscale. It comes into different level of sharpness. Universal Upscaler Neutral, Universal Upscaler Sharp, Universal Upscaler Sharper. <br> <br> <img style='width: 95%; height: 95%' src='universalupscaler.png' alt='Universal Upscaler'> <br> Download Universal Upscaler from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> Upscale Wiki Model Database </a> <br> <br> Ultrasharp is a fantastic model for upscaling. <br> <br> <img style='width: 95%; height: 95%' src='ultrasharp.png' alt='Ultrasharp'> <br> Download Ultrasharp from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> Upscale Wiki Model Database </a> <br> <br> Uniscale is good for upscaling. It comes in different setting depending whether you want a more sharp or soft upscale. Uniscale balanced, Uniscale strong, Uniscale V2 Soft, Uniscale V2 Moderate, Uniscale V2 Sharp, Uniscale NR Balanced, Uniscale NR Strong, Uniscale Interp. <br> <br> <img style='width: 95%; height: 95%' src='uniscale.png' alt='Univscale'> <br> Download Uniscale models from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> Upscale Wiki Model Database </a> <br> <br> NMKD superscale is a great model for upscaling. <br> <br> <img style='width: 95%; height: 95%' src='nmkd.png' alt='NMKD'> <br> Download NMKD superscale from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> Upscale Wiki Model Database </a>",
+      "Essentially you upscale with a conventional upscaler and then you add details with stable diffusion tile by tile as doing the whole upscaled version would make you run out of VRAM. You can use any checkpoint to do this. So you could generate your image with 1.5 and upscale with the depth model. You could generated with 2.1 and upscale with Robodiffusion..... <br> <br> Honorable mention: SD 2.0 4x Upscaler <br> SD 2.0 4x Upscaler is the official model from stability.ai. It uses a lot of VRAM so not many are using it atm. <br> You can also do upscaling without any optimisation using Denoising Diffusion Null-Space Model (DDNM). Super super slow took me ages to 4x upscale a 512x512 image on a T4. You also need to use a class label you can find e.g. <a target='_blank' id='links' href='https://gist.github.com/yrevar/942d3a0ac09ec9e5eb3a'>here</a>. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/wyhuai/DDNM'>DDNM Github repo</a>",
+      "Essentially you upscale with a conventional upscaler and then you add details with stable diffusion tile by tile as doing the whole upscaled version would make you run out of VRAM. You can use any checkpoint to do this. So you could generate your image with 1.5 and upscale with the depth model. You could generated with 2.1 and upscale with Robodiffusion..... You ask, is it really upscaling when we are adding in new details? Well the distinction between upscaling and img2img is not binary, it depends on the denoising strength.",
+      "Ramacri is a really nice model for upscaling. <br> <br> <img style='width: 95%; height: 95%' src='remacri.png' alt='Remacri'> <br> Download Remacri from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> Upscale Wiki Model Database </a> <br> <br> RealESRGAN is an algorithm based on ESRGAN. <br> <br> <img style='width: 95%; height: 95%' src='resergan.png' alt='R-ESRGAN'> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/xinntao/Real-ESRGAN'>Real ESRGAN</a> <br> Try it here: <br> <a target='_blank' id='links' href='https://huggingface.co/spaces/akhaliq/Real-ESRGAN'>Real-ESRGAN Gradio Demo</a> <br> <br> ESRGAN is a great model for upscaling. <br> Download ESRGAN from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Official_Research_Models'> Official Research Model Database </a>  <br> <br> Lollypop is a really nice model for upscaling. <br> <br> <img style='width: 95%; height: 95%' src='lollypop.png' alt='Lollypop'> <br> Download Lollypop from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> Upscale Wiki Model Database </a> <br> <br> I like Universal Upscaler. I like it even more as most upscalers finished up with light touch of SD upscale. It comes into different level of sharpness. Universal Upscaler Neutral, Universal Upscaler Sharp, Universal Upscaler Sharper. <br> <br> <img style='width: 95%; height: 95%' src='universalupscaler.png' alt='Universal Upscaler'> <br> Download Universal Upscaler from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> Upscale Wiki Model Database </a> <br> <br> Ultrasharp is a fantastic model for upscaling. <br> <br> <img style='width: 95%; height: 95%' src='ultrasharp.png' alt='Ultrasharp'> <br> Download Ultrasharp from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> Upscale Wiki Model Database </a> <br> <br> Uniscale is good for upscaling. It comes in different setting depending whether you want a more sharp or soft upscale. Uniscale balanced, Uniscale strong, Uniscale V2 Soft, Uniscale V2 Moderate, Uniscale V2 Sharp, Uniscale NR Balanced, Uniscale NR Strong, Uniscale Interp. <br> <br> <img style='width: 95%; height: 95%' src='uniscale.png' alt='Univscale'> <br> Download Uniscale models from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> Upscale Wiki Model Database </a> <br> <br> NMKD superscale is a great model for upscaling. <br> <br> <img style='width: 95%; height: 95%' src='nmkd.png' alt='NMKD'> <br> Download NMKD superscale from: <br> <a target='_blank' id='links' href='https://upscale.wiki/wiki/Model_Database'> Upscale Wiki Model Database </a>",
+      "DPM means Diffusion Probabilistic Models. DPM++ means that it uses a new solver that speeds up guided sampling. Anyway these are super fast, so why use Euler, LMS, PLMS or DDIM when you can get the result in much fewer steps with DPM++ samplers. Further ressources: <br> <a target='_blank' id='links' href='https://arxiv.org/pdf/2211.01095.pdf'>DPM-Solver ++ paper</a>",
+      "All samplers can come in an Ancestral flavour meaning a little bit of noise is added at each steps. These samplers do not converge to an image like other samplers do, they simply keep on giving new images with increasing number of steps. Often they give a nice image with a very low step count.",
+      "DPM++ 2M means that it is a multi step DPM++ solver. It perform better for large guidance scale. You can also use the Karras version though they seem to produce very similar images. Further ressources: <br> <a target='_blank' id='links' href='https://arxiv.org/pdf/2211.01095.pdf'>DPM-Solver ++ paper</a> <br> <a target='_blank' id='links' href='https://arxiv.org/pdf/2206.00364.pdf'>Karras paper (quite technical)</a>",
+      "DPM++ SDE is a DPM++ sampler that is stochastic. You can also use the Karras version though they seem to produce very similar images. Further ressources: <br> <a target='_blank' id='links' href='https://arxiv.org/pdf/2206.00364.pdf'>Karras paper (quite technical)</a>",
+      "Euler A is the classic Euler method but adding a bit of noise at each steps. This is an amazing samplers, that produces nice images at low step counts. It never converges, so it is a nice one to explore at different step count for variations. Like all ancestral samplers you can play around with the amount of noise added at each steps to change the aspects of your image.",
+      "DPM++ 2S A means that it is a single step DPM++ solver. It performs better for small guidance scale. This yields really nice results. Like other ancestral samplers, it never converges. Further ressources: <br> <a target='_blank' id='links' href='https://arxiv.org/pdf/2211.01095.pdf'>DPM-Solver ++ paper</a>",
+      "DPM++ 2S A Karras means that it is a single step DPM++ solver. It performs better for small guidance scale. Really good results from this one. Like other ancestral samplers it never converges. Further ressources: <br> <a target='_blank' id='links' href='https://arxiv.org/pdf/2211.01095.pdf'>DPM-Solver ++ paper</a>",
+      "Sometimes you want to adjust the details of a face, like the eyes. You can do this with face restoration algorithms.",
+      "GFPGAN is an algorithm that uses a styleGAN for face restoration. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/TencentARC/GFPGAN'>GFPGAN</a> <br> <br> Try it here: <br> <a target='_blank' id='links' href='https://huggingface.co/spaces/akhaliq/GFPGAN'>GFPGAN Gradio Demo</a>",
+      "Code Former is an algorithm for face restoration. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/sczhou/CodeFormer'>Code Former</a> <br> <br> Try it here: <br> <a target='_blank' id='links' href='https://huggingface.co/spaces/sczhou/CodeFormer'>Code Former Gradio Demo</a>",
+      "The autoencoder from the original 1.5 model is not so good at representig faces. The MSE VAE or EMA VAE are better at representing human faces. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://huggingface.co/stabilityai/sd-vae-ft-ema#visual'>Original vs EMA vs MSE VAE</a>",
+      "Stable Diffusion v1.1 (256x256, 194k steps), 1.2 (512x512, 515k steps) and 1.3 (512x512, 195k steps) were trained on subsets of LAION-2B. SD v1.4 (512x512) was trained on laion-aesthetics v2 5+ for 225k steps and had the wow factor. Stable diffusion v1.5 was also trained on laion-aesthetics v2 5+ but for 595k steps. Generally considered an improvement on 1.4 though many still use 1.4. They also release an inpainting model. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://huggingface.co/CompVis/stable-diffusion-v-1-2-original'>Stable diffusion 1.1, 1.2, 1.3</a> <br> <a target='_blank' id='links' href='https://huggingface.co/CompVis/stable-diffusion-v1-4'>Stable diffusion 1.4</a> <br> <a target='_blank' id='links' href='https://huggingface.co/runwayml/stable-diffusion-v1-5'>Stable diffusion 1.5</a> <br> <br>",
+      "Stable diffusion 2.0 and 2.1 were release closely from each other with 2.1 being considered an improvement. They were trained on LAION-5B (5B meaning roughly 5 billions while 2B was 2 billion images). But perhaps one of the biggest change from a user perspective was the change from CLIP (OpenAI) to OpenCLIP which is an open source version of CLIP. This is fantastic from an open source perspective as we don't know what was in the training of CLIP. But it does mean that many thing that were easy to do in v1 are harder to do or do not easily translate to v2.",
+      "Community models take the v1 or v2 checkpoint and finetuned them to a specific style or object. You can find community models on <a target='_blank' id='links' href='https://huggingface.co/'>Hugginface</a>.",
+      "SD1.4 is a 512x512 model. It was the first SD model that really shone. It is still heavily used today and many fine tuned models and embeddings are based on SD1.4.",
+      "SD1.5 is a 512x512 models that comes in two flavours, vanilla 1.5 and inpainting 1.5. SD1.5 is generally considered a solid and amazing all purpose model.",
+      "SD2.1 comes in 512x512 or 768x768 version. Because it uses OpenCLIP instead of CLIP, many were frustrated at not being able to replicate their SD1.5 workflow on SD2.1, but things are evolving rapidly with new fine tuned models and new embeddings emerging daily extending the capabilities of SD2.1.",
+      "The 512 depth model only enables you to do img2img, but it preserves the composition much better than conventional img2img.",
+      "Merging checkpoints allow you to mix two concepts together.",
+      "Using multiple hypernetwork or embeddings allows you mix style and objects together.",
+      "Fine tuned community models take a v1 or v2 checkpoint and finetuned them to a specific style or object. You can find community models on <a target='_blank' id='links' href='https://huggingface.co/'>Hugginface</a>.",
+      "Merged community models take two or more models and merge them together. You can find community models on <a target='_blank' id='links' href='https://huggingface.co/'>Hugginface</a>.",
+      "Megamerged models are a class of their own. They are a merge of more than 5 models with a particular style, object or capabilities in mind. You can find community models on <a target='_blank' id='links' href='https://huggingface.co/'>Hugginface</a>.",
+      "Community embeddings are just that, not a checkpoint but just a new embeddings resulting from textual inversion. They are useful to add to your prompts to obtain a desired style of object without using a fully fine-tuned model. You can find community models on <a target='_blank' id='links' href='https://huggingface.co/sd-concepts-library'>the sd concept library on Hugginface</a>.",
+      "Brute Force is systematically exploring the parameter space. It can be done in one dimension (e.g. exploring the impact of cfg scale), two dimensions (cfg scale and steps) or n-dimensions (steps, samplers, denoising strength....).",
+      "Using randomness in the prompts and the parameters allows you to explore different type and styles of images.",
+      "One parameter exploration is generating a set of images by varying a single parameter (e.g. the delay in our prompt delay). <br> <br> <img style='width: 100%; height: 100%' src='onedimension.png' alt='One dimension'> <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Features'>Webui wiki</a> <br>",
+      "XY Grid exploration is generating a grid of images by varying two parameters (e.g. steps and cfg scale). <br> <br> <img style='width: 95%; height: 95%' src='xygrid.png' alt='XY grid'> <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Features'>Webui wiki</a> <br>",
+      "Infinity grid is like XY grid but with as many paramaters as you want. <br> <br> <img style='width: 95%; height: 95%' src='infinitygrid.png' alt='Infinity grid'> <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/mcmonkeyprojects/sd-infinity-grid-generator-script'>Infinity grid</a>",
+      "Prompt Matrix is generating a grid of images by generating all the combinations of two prompts (e.g. chaotic evil matrix). <br> <br> <img style='width: 95%; height: 95%' src='XYWords.png' alt='XY words'> <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Features'>Webui wiki</a> <br>",
+      "The idea is to generate a large number of images using a combination of words randomly chosen. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/adieyal/sd-dynamic-prompts'>Dynamic Prompt Extension</a>",
+      "You can also use multiple controlNets, T2I-Adapters or controlNets with T2i Adapters to obtain highly controled results. In the example below for example, I use the depth controlNet with the T2I-Adapter style. <br> <br> <img style='width: 25%; height: 25%' src='original.png' alt='Original image'> <img style='width: 25%; height: 25%' src='depthpreprocessor.png' alt='Depth preprocessor image'> <img style='width: 25%; height: 25%' src='styledepthpreprocessor.jpg' alt='Clip vision preprocessor'> <img style='width: 25%; height: 25%' src='styledepthoutput.png' alt='Clip vision controlNet output'> <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://www.reddit.com/r/StableDiffusion/comments/119o71b/a1111_controlnet_extension_explained_like_youre_5/?utm_name=androidcss'>Control net explainer</a> <br> <br>",
+      "The idea is to have better control of the composition by placing placeholders on the canvas.",  
+      "Instead of getting the input of control net from a preprocessor, the idea is to do it manually, either by doing a sketch or manipulating an pose model.",
+      "A preprocessor allows you to preprocess and image so that you can use some of its compositional features (most likely with a ControlNet type of model). They can be broadly divided into 3D preprocessors, 2D preprocessors and pose.",
+      "There are a couple of type of 2D preprocessors currently M-LSD lines, Canny Edge, HED boundary and Semantic Segmentation.",
+      "There are two main 3D preprocessors the depth preprocessor and the normal map preprocessor.",
+      "The pose preprocessor can predict the location and orientation of different keypoints, such as joints, facial features, hands and feet.",
+      "Canny edge detection is good at finding a wide range of edges in the image while also eliminating noise and preserving edge continuity. <br> <br> <img style='width: 25%; height: 25%' src='original.png' alt='Original image'> <img style='width: 25%; height: 25%' src='cannypreprocessor.png' alt='Canny preprocessor'> <img style='width: 25%; height: 25%' src='cannyoutput.png' alt='Canny controlNet output'>",
+      "M-LSD maps out the wireframes of objects, it is great at detecting straight lines. <br> <br> <img style='width: 25%; height: 25%' src='original.png' alt='Original image'> <img style='width: 25%; height: 25%' src='mlsdpreprocessor.png' alt='MLSD preprocessor'> <img style='width: 25%; height: 25%' src='mlsdoutput.png' alt='MLSD controlNet output'>",
+      "The Holistically Nested Edge Detection (HED) preprocessor is good at preserving object boundaries. It can be more robust than canny and you don't have to set these tresholds. <br> <br> <img style='width: 25%; height: 25%' src='original.png' alt='Original image'> <img style='width: 25%; height: 25%' src='hedpreprocessor.png' alt='HED preprocessor'> <img style='width: 25%; height: 25%' src='hedoutput.png' alt='HED controlNet output'>",
+      "Semantic segmentation assigns a label or category to every pixel in the image. The preprocessor recognizes and groups pixels that belong to the same object class. <br> <br> <img style='width: 25%; height: 25%' src='original.png' alt='Original image'> <img style='width: 25%; height: 25%' src='semanticpreprocessor.png' alt='Semantic preprocessor'> <img style='width: 25%; height: 25%' src='semanticoutput.png' alt='Semantic controlNet output'>",
+      "A depth map contains information relating to the distance of the surfaces of scene objects from a viewpoint.  <br> <br> <img style='width: 25%; height: 25%' src='original.png' alt='Original image'> <img style='width: 25%; height: 25%' src='depthpreprocessor.png' alt='Depth preprocessor'> <img style='width: 25%; height: 25%' src='depthoutput.png' alt='Depth controlNet output'>",
+      "In a normal map, the RGB colour tell how the surface normals are oriented for each polygon. <br> <br> <img style='width: 25%; height: 25%' src='original.png' alt='Original image'> <img style='width: 25%; height: 25%' src='normalpreprocessor.png' alt='Normal preprocessor'> <img style='width: 25%; height: 25%' src='normaloutput.png' alt='Normal controlNet output'>",
+      "This preprocessor capture humans pose by creating a stick figure.",
+      "Here the idea is that the best way to get what you want is to sketch with pen and paper or on a tablet and use ControlNet.",
+      "The idea is to generate the exact pose you want to use in ControlNet.",
+      "Here the idea is that the best way to get what you want is to sketch with pen and paper or on a tablet and use ControlNet.",
+      "The pose editor allows you to edit the joints and facial features to later use in the pose model of ControlNet. <br> <br> <img style='width: 95%; height: 95%' src='openpose.png' alt='Open Pose'>",
+      "Dynamic tresholding allows to use high cfg scales without having weird color saturation effects. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/mcmonkeyprojects/sd-dynamic-thresholding'>Dynamic Tresholding Repo</a>",
+      "You can use a controlNet to control the composition of your creation by feeding it an additional image or the output from one of the preprocessors.",
+      "You can also use multiple controlNets, T2I-Adapters or controlNets with T2i Adapters to obtain highly controled results. In the example below for example, I use the depth controlNet with the T2I-Adapter style. <br> <br> <img style='width: 25%; height: 25%' src='original.png' alt='Original image'> <img style='width: 25%; height: 25%' src='depthpreprocessor.png' alt='Depth preprocessor image'> <img style='width: 25%; height: 25%' src='styledepthpreprocessor.jpg' alt='Clip vision preprocessor'> <img style='width: 25%; height: 25%' src='styledepthoutput.png' alt='Clip vision controlNet output'> <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://www.reddit.com/r/StableDiffusion/comments/119o71b/a1111_controlnet_extension_explained_like_youre_5/?utm_name=androidcss'>Control net explainer</a> <br> <br>",
+      "Parameters you can change to obtain better output.",
+      "Stable diffusion tend to generate images with an average value close to 0.5 (if black is 0 and white is 1). Offset noise allows to overcome this and generate very bright or dark images. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://www.crosslabs.org/blog/diffusion-with-offset-noise'>Diffusion with offset noise</a> <br>",
+      "Dynamic tresholding allows to use high cfg scales without having weird color saturation effects. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/mcmonkeyprojects/sd-dynamic-thresholding'>Dynamic Tresholding Repo</a>",
+      "Stable diffusion tend to generate images with an average value close to 0.5 (if black is 0 and white is 1). Offset noise allows to overcome this and generate very bright or dark images. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://www.crosslabs.org/blog/diffusion-with-offset-noise'>Diffusion with offset noise</a> <br>",
+      "Specific tools to obtain more consistent images.",
+      "Usually after you change the image dimension, the image completely change. Seed resize allows you to change the image dimension without changing the image too much. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Features'>Webui wiki</a> <br>",
+      "This allows you to make an image using to look like an image from another seed. You cnan increase the factor to smoothly make it look like an image in a nother seed. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Features'>Webui wiki</a> <br>",
+      "You need tools to do the data engineering required before doing your finetuning. You can find some below. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/victorchall/EveryDream'>Tools for data preparation</a> <br>",
+      "You need tools to do the data engineering required before doing your finetuning. You can find some below. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/victorchall/EveryDream'>Tools for data preparation</a> <br>",
+      "Community embeddings are just that, not a checkpoint but just a new embeddings resulting from textual inversion. They are useful to add to your prompts to obtain a desired style of object without using a fully fine-tuned model. You can find community models on <a target='_blank' id='links' href='https://huggingface.co/sd-concepts-library'>the sd concept library on Hugginface</a>.",
+      "Community embeddings are just that, not a checkpoint but just a new embeddings resulting from textual inversion. They are useful to add to your prompts to obtain a desired style of object without using a fully fine-tuned model. You can find community models on <a target='_blank' id='links' href='https://huggingface.co/sd-concepts-library'>the sd concept library on Hugginface</a>.",
+      "This is your starting point. What UI will you use to make your images. You have commercial options and free options.",
+      "There are many options. The most mainstream ones are <a target='_blank' id='links' href='https://beta.dreamstudio.ai/'>DreamStudio</a> and <a target='_blank' id='links' href='https://runwayml.com/'>Runwayml</a>.",
+      "The main UI people are using are <a target='_blank' id='links' href='https://github.com/AUTOMATIC1111/stable-diffusion-webui'>Auto1111 StableDifussion Webui</a> if you want to be on the bleeding edge and don't mind a few things breaking now and then, <a target='_blank' id='links' href='https://github.com/invoke-ai/InvokeAI/'>InvokeAI</a> if you love inpainting, outpainting and just a great UI and canvas, <a target='_blank' id='links' href='https://github.com/comfyanonymous/ComfyUI'>ComfyUI</a> if you want advance pipelines and workflows and <a target='_blank' id='links' href='https://nmkd.itch.io/t2i-gui'>NKMD GUI</a> if you have a good graphic card and can run it locally. There are plenty of others that I am missing. My go to page for Colab is <a target='_blank' id='links' href='https://pharmapsychotic.com/tools.html'>Pharmapsychotic tools</a>",
+      "The main UI people are using are <a target='_blank' id='links' href='https://github.com/AUTOMATIC1111/stable-diffusion-webui'>Auto1111 StableDifussion Webui</a> if you want to be on the bleeding edge and don't mind a few things breaking now and then, <a target='_blank' id='links' href='https://github.com/invoke-ai/InvokeAI/'>InvokeAI</a> if you love inpainting, outpainting and just a great UI and canvas, <a target='_blank' id='links' href='https://github.com/comfyanonymous/ComfyUI'>ComfyUI</a> if you want advance pipelines and workflows and <a target='_blank' id='links' href='https://nmkd.itch.io/t2i-gui'>NKMD GUI</a> if you have a good graphic card and can run it locally. There are plenty of others that I am missing. My go to page for Colab is <a target='_blank' id='links' href='https://pharmapsychotic.com/tools.html'>Pharmapsychotic tools</a>",
+      "There are many options. The most mainstream ones are <a target='_blank' id='links' href='https://beta.dreamstudio.ai/'>DreamStudio</a> and <a target='_blank' id='links' href='https://runwayml.com/'>Runwayml</a>.",
+      "This is about combining two or more images to create a single image.",
+      "Image mixer can combine two or more images to create a new image. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://huggingface.co/spaces/lambdalabs/image-mixer-demo'>Try Image mixer on hugginface</a> <br>",
+      "T2I Adapter is another way to control composition like ControlNet. In addition, you can even control style and color. It is also faster than controlNet as it is not iterative. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/TencentARC/T2I-Adapter'>T2I adapter repo</a> <br>",
+      "This is about improving the quality of the diffusion process.",
+      "Self-attention guidance blurs selectively regions that diffusion models work on. That allows to better guide the diffusion process. <br> <br> <img style='width: 45%; height: 45%' src='withoutSAG.png' alt='Without SAG'> <img style='width: 45%; height: 45%' src='withSAG.png' alt='With SAG'> <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://ku-cvlab.github.io/Self-Attention-Guidance/'>Self-attention Guidance on github</a> <br>",
+      "Sometimes you want to better understand how your prompt affect the composition. Especially with style type of prompts or adjectives.",
+      "Sometimes you want to better understand how your prompt affect the composition. Especially with style type of prompts or adjectives.",
+      "Attention map allows you to visualise what each of the prompt keywords does to the image with a heatmap. <br> <br> <img style='width: 45%; height: 45%' src='attentionmaporiginal.png' alt='Original image'> <img style='width: 45%; height: 45%' src='attentionmap1.png' alt='Original image'> <img style='width: 45%; height: 45%' src='attentionmap2.png' alt='Original image'> <img style='width: 45%; height: 45%' src='attentionmap3.png' alt='Original image'> <img style='width: 45%; height: 45%' src='attentionmap4.png' alt='Original image'> <img style='width: 45%; height: 45%' src='attentionmap5.png' alt='Original image'> <img style='width: 45%; height: 45%' src='attentionmap6.png' alt='Original image'> <img style='width: 45%; height: 45%' src='attentionmap7.png' alt='Original image'> <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://arxiv.org/abs/2210.04885'>Attention attribution map paper</a> <br> <br> Try it on hugginface: <br> <a target='_blank' id='links' href='https://huggingface.co/spaces/tetrisd/Diffusion-Attentive-Attribution-Maps'>Attention attribution map</a>",
+      "Controlling the position of multiple subject or keywords on the canvas is hard. This is where some tools can help.",
+      "Multidiffusion allows to precisely control fwhere different subjects are placed on the composition. <br> <a target='_blank' id='links' href='https://multidiffusion.github.io/'>Multidiffusion repo</a> <br>",
+      "Grounded-Language-to-Image Generation allows you precise control over where different subject are placed in the composition.  <br> <a target='_blank' id='links' href='https://gligen.github.io/'>GLIGEN repo</a> <br>",
+      "E4T allows you train a new concept with a single input image. It trains both an embedding and changes the weights. <br> <br> Further ressource: <br> <a target='_blank' id='links' href='https://github.com/mkshing/e4t-diffusion'>E4T github project</a>",
+      "E4T allows you train a new concept with a single input image. It trains both an embedding and changes the weights. <br> <br> Further ressource: <br> <a target='_blank' id='links' href='https://github.com/mkshing/e4t-diffusion'>E4T github project</a>",
+      "The Unet takes an image as in input and give another image as output. The basic parts of a Unet are convolution layers, pooling layers and activation layers. Put together these form a block. We use a series of these blocks for the Unet. When doing an unweighted merge we merge all of the blocks at the same ratio. Another option is to merge the Unet but assigning different weights to the block. For instance model A for the external blocks (begenning and end) and model B for the middle blocks. Another way would be to have a V profile as below. Playing with these can lead to interesting effects and much more control on the merge. <img style='width: 95%; height: 95%' src='blockweighted.png' alt='Block weighted'> <br> <br> Further ressource: <br> <a target='_blank' id='links' href='https://github.com/bbc-mc/sdweb-merge-block-weighted-gui'>Merge block weighted</a>",
+      "You can merge LORA to combine two style, two subjects or both. <br> <br> Further ressource: <br> <a target='_blank' id='links' href='https://github.com/derrian-distro/LoRA_Easy_Training_Scripts'>LORA merging</a>",
+      "The idea is to remove some concepts such as objects or styles from an image by making the model itself unlearn a particular concept. <br> <br> Further ressource: <br> <a target='_blank' id='links' href='https://erasing.baulab.info/'>Erasing concepts from diffusion models</a>",
+      "The idea is to remove some concepts such as objects or styles from an image by making the model itself unlearn a particular concept. <br> <br> Further ressource: <br> <a target='_blank' id='links' href='https://erasing.baulab.info/'>Erasing concepts from diffusion models</a>",
+    "CLIP vision  <br> <br> <img style='width: 25%; height: 25%' src='original.png' alt='Original image'> <img style='width: 25%; height: 25%' src='styledepthpreprocessor.jpg' alt='Clip vision preprocessor'> <img style='width: 25%; height: 25%' src='styledepthoutput.png' alt='Clip vision controlNet output'>",
+    "Binary  <br> <br> <img style='width: 25%; height: 25%' src='original.png' alt='Original image'> <img style='width: 25%; height: 25%' src='binarypreprocessor.png' alt='Binary preprocessor'> <img style='width: 25%; height: 25%' src='binaryoutput.png' alt='Binary controlNet output'>",
+    "Color  <br> <br> <img style='width: 25%; height: 25%' src='styledepthpreprocessor.jpg' alt='Original image'> <img style='width: 25%; height: 25%' src='colorpreprocessor.png' alt='Color preprocessor'> <img style='width: 25%; height: 25%' src='colordepthoutput.png' alt='Color T2I output'>",
+    "Pidinet  <br> <br> <img style='width: 25%; height: 25%' src='original.png' alt='Original image'> <img style='width: 25%; height: 25%' src='pidinetpreprocessor.png' alt='Pidinet preprocessor'> <img style='width: 25%; height: 25%' src='pidinetoutput.png' alt='Pidinet controlNet output'>",
+    "Fake scrible  <br> <br> <img style='width: 25%; height: 25%' src='original.png' alt='Original image'> <img style='width: 25%; height: 25%' src='fakescriblepreprocessor.png' alt='Fake scrible preprocessor'> <img style='width: 25%; height: 25%' src='fakescribleoutput.png' alt='Fake scrible controlNet output'>",
+    "You can train a controlNet. If you have features that are spatially consistent accross images and want to generate some images with these features, you can train a controlNet. This is very promising for extensive controls over your specific generative application. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://huggingface.co/blog/train-your-controlnet'>Train your own controlNet</a> <br> <br> There has been a couple of people training contolNet on face landmarks for example <a target='_blank' id='links' href='https://github.com/Georgefwt/Face-Landmark-ControlNet'>face landmark controlNet</a>. <br>",
+    "You can train a controlNet. If you have features that are spatially consistent accross images and want to generate some images with these features, you can train a controlNet. This is very promising for extensive controls over your specific generative application. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://huggingface.co/blog/train-your-controlnet'>Train your own controlNet</a> <br> <br> There has been a couple of people training contolNet on face landmarks for example <a target='_blank' id='links' href='https://github.com/Georgefwt/Face-Landmark-ControlNet'>face landmark controlNet</a>. <br>",
+    "RestoreFormer is an algorithm for face restoration. <br> <br> Further ressources: <br> <a target='_blank' id='links' href='https://github.com/wzhouxiff/RestoreFormer'>RestoreFormer</a>",
+    "Color               ",
+    "Style             ",
+    "Clip vision               "]
+
+var div = document.getElementById('myDiv');
+
+var data = [{
+  type: "sunburst",
+  labels: ["SDTools", "Capturing concepts", "Core", "Finishing", "Editing Composition", "Controling composition", "Initiating composition", "Capturing composition", "Upscaling", "Fine tuning", "Training", "Image2Image", "Text2Image", "Mixing", "Samplers", "Restoring", "Image2text ", "VAE", "Models", "Exploring",
+    "Caption based", "Token based", "LORA", "Hypernetwork", "Textual Inversion",
+    "Img2Img", "Depth2Image",
+    "Prompt editing",
+    "Image2text",
+    "CLIP Interrogation", "BLIP Image Captioning",
+    "Prompt Weighting", "Prompt Delay", "Alternating Words", "Negative Prompts",
+    "Text based editing",
+    "InstructPix2Pix", "Imagic",
+    "Loopback", "Inpainting", "Outpainting", "Img2Img ",
+    "Dreambooth",
+    "Fine tuning ",
+    "Unweighted",
+    "One Hypernetwork",
+    "Multiple Hypernetworks",
+    "LORA training",
+    "New Embedding", "Multiple Embedding", "Negative Embedding",
+    "Depth Map", "Depth Preserving Img2Img",
+    "ESRGAN", "SD Upscale",
+    "SD Upscale ",
+    "ESRGAN-based",
+    "DPM++", "Ancestral",
+    "DPM++ 2M ", "DPM++ SDE",
+    "Euler A", "DPM++ 2S A", "DPM++ 2S A Karras",
+    "Face restoration",
+    "GFPGAN", "Code Former",
+    "VAE ",
+    "1", "2", "Community",
+    "1.4", "1.5",
+    "2.1", "512 depth",
+    "Merging ", "Using multiple",
+    "Fine tuned", "Merged", "Megamerged", "Embeddings",
+    "Brute Force", "Randomness",
+    "One parameter", "XY grid", "Infinity Grid", "Prompt Matrix",
+    "Random words",
+    "Multiple",
+    "Composing",
+    "Creating",
+    "Preprocessors",
+    "2D",
+    "3D",
+    "Pose ",
+    "Canny Edge ",
+    "M-LSD lines ",
+    "HED boundary ",
+    "Semantic seg",
+    "Depth ",
+    "Normal Map ",
+    "Human Pose",
+    "2D ",
+    "Pose  ",
+    "Sketch ",
+    "Pose editor",
+    "Dynamic tresholding",
+    "ContorlNet   ",
+    "Multiple  ",
+    "Tweaks",
+    "Brightness",
+    "Saturation",
+    "Offset noise",
+    "Utility",
+    "Seed Resize",
+    "Variations",
+    "Data Preparation",
+    "Tools ",
+    "Embeddings ",
+    "Embeddings  ",
+    "Interface",
+    "Commercial",
+    "Free",
+    "Free ",
+    "Commercial ",
+    "Images2Image",
+    "Image mixer",
+    "T2I Adapter",
+    "Quality",
+    "SAG",
+    "Understanding",
+    "Prompt",
+    "Attention map",
+    "Multiple subjects",
+    "Multidiffusion",
+    "GLIGEN",
+    "E4T",
+    "E4T ",
+    "Block weighted",
+    "LORA ",
+    "Erasing concepts",
+    "Erasing concepts ",
+    "T2I-style",
+    "Binary",
+    "T2I-Color",
+    "Pidinet",
+    "Fake scrible",
+    "ControlNet  ",
+    "ControlNet   ",
+    "RestoreFormer",
+    "Single",
+    "Iterative",
+    "T2I-Adapter ",
+    "ControlNet      ",
+    "Color ",
+    "Style ",
+    "Clip vision"],
+  parents: ["", "SDTools", "SDTools", "SDTools", "SDTools", "SDTools", "SDTools", "SDTools", "Finishing", "Capturing concepts", "Capturing concepts", "Editing Composition", "Initiating composition", "Capturing concepts", "Core", "Finishing", "Capturing concepts", "Models", "Core", "Initiating composition",
+    "Fine tuning", "Fine tuning", "Training", "Training", "Training",
+    "Image2Image", "Single",
+    "Text2Image",
+    "Image2text ",
+    "Image2text", "Image2text",
+    "Prompt editing", "Prompt editing", "Prompt editing", "Prompt editing",
+    "Image2Image",
+    "Text based editing", "Text based editing",
+    "Img2Img", "Img2Img", "Img2Img", "Img2Img",
+    "Token based",
+    "Caption based",
+    "Merging ",
+    "Hypernetwork",
+    "Using multiple",
+    "LORA",
+    "Textual Inversion",
+    "Using multiple",
+    "Textual Inversion",
+    "Depth2Image", "Depth2Image",
+    "Upscaling", "Upscaling",
+    "SD Upscale",
+    "ESRGAN",
+    "Samplers", "Samplers",
+    "DPM++", "DPM++",
+    "Ancestral", "Ancestral", "Ancestral",
+    "Restoring",
+    "Face restoration", "Face restoration",
+    "VAE",
+    "Models", "Models", "Models",
+    "1", "1",
+    "2", "2",
+    "Mixing", "Mixing",
+    "Community", "Community", "Community", "Core",
+    "Exploring", "Exploring",
+    "Brute Force", "Brute Force", "Brute Force", "Brute Force",
+    "Randomness",
+    "T2I-Adapter ",
+    "Controling composition",
+    "Initiating composition",
+    "Capturing composition",
+    "Preprocessors",
+    "Preprocessors",
+    "Preprocessors",
+    "2D",
+    "2D",
+    "2D",
+    "2D",
+    "3D",
+    "3D",
+    "Pose ",
+    "Creating",
+    "Creating",
+    "2D ",
+    "Pose  ",
+    "Saturation",
+    "ControlNet      ",
+    "ControlNet      ",
+    "Core",
+    "Tweaks",
+    "Tweaks",
+    "Brightness",
+    "Exploring",
+    "Utility",
+    "Utility",
+    "Fine tuning",
+    "Data Preparation",
+    "Embeddings",
+    "Embeddings ",
+    "Core",
+    "Interface",
+    "Interface",
+    "Free",
+    "Commercial",
+    "Image2Image",
+    "Images2Image",
+    "T2I-Adapter ",
+    "Tweaks",
+    "Quality",
+    "Initiating composition",
+    "Understanding",
+    "Prompt",
+    "Composing",
+    "Multiple subjects",
+    "Multiple subjects",
+    "Training",
+    "E4T",
+    "Merging ",
+    "Merging ",
+    "Image2Image",
+    "Erasing concepts",
+    "Clip vision",
+    "2D",
+    "Color ",
+    "2D",
+    "2D",
+    "Training",
+    "ControlNet  ",
+    "Face restoration",
+    "Controling composition",
+    "Controling composition",
+    "Single",
+    "Iterative",
+    "Tweaks",
+    "Capturing concepts",
+    "Style "
+    ],
+  outsidetextfont: { size: 20, color: "white" , family: 'Roboto, sans-serif'},
+  leaf: { opacity: 0.4 },
+  textfont: {
+    color: 'white'
+  },
+  font: {family: 'Roboto, sans-serif'},
+  marker: { line: { width: 2 },
+  colors: ['#333', '#ea3323', '#ff8b00', '#febb26', '#1eb253', '#017cf3', '#9c78fe','#5f0bcb']},
+}];
+
+var graphDiv = document.getElementById("myDiv");
+var graphWidth = graphDiv.clientWidth;
+
+var layout = {
+  margin: { l: 0, r: 0, b: 0, t: 0 },
+  autosize: true,
+  responsive: true,
+  paper_bgcolor: '#333',
+  plot_bgcolor: '#333',
+  width: graphWidth,
+  height: graphWidth,
+  annotations: [
+  {
+    x: 1,
+    y: 0,
+    text: 'sdtools.org<br>v1.6<br> ',
+    showarrow: false,
+    font: {
+      color: "white",
+      family: 'Roboto, sans-serif'
+    }
+  }]
+};
+
+
+Plotly.newPlot('myDiv', data, layout);
+
+    // restyle two traces using attribute strings
+var update = {
+  sort: false
+};
+Plotly.restyle('myDiv', update);
+
+    // Set up a click event handler for the sunburst chart
+div.on('plotly_click', function (data1) {
+  var datanumber = data1.points[0].pointNumber;
+  var titleDiv = document.getElementById("titleDiv");
+  var plotDiv = document.getElementById('plot');
+  if (data[0].labels[datanumber] === "Preprocessors" || data[0].labels[datanumber] === "Capturing composition" || data[0].labels[datanumber] === "T2I-Adapter " || data[0].labels[datanumber] === "ControlNet") {
+    // Create the plot
+    Plotly.newPlot("plot", [data2], layout2);
+  //  window.location.href = "upscaling.html";
+  }
+  else {
+    Plotly.purge(plotDiv);
+  }
+  titleDiv.innerHTML = data[0].labels[datanumber];
+  var contentDiv = document.getElementById("contentDiv");
+  contentDiv.innerHTML = content[datanumber];
+});
+
+window.onresize = function () {
+  var graphDiv = document.getElementById("myDiv");
+  var graphWidth = graphDiv.clientWidth;
+  Plotly.relayout('myDiv', {
+    width: graphWidth,
+    height: graphWidth
+  });
+}
+
+data[0].level = '';
+Plotly.redraw('myDiv', data, layout);
+
+    // Add an event listener to the back button
+document.getElementById("back-button").addEventListener("click", function () {
+      // Modify the data and layout as desired
+      // ...
+
+      // Update the Plotly graph with the new data and layout
+  var plotDiv = document.getElementById('plot');
+  Plotly.purge(plotDiv);
+  data[0].level = '';
+  Plotly.redraw('myDiv', data, layout);
+});
+
+
+// Define the data
+var data2 = {
+  type: "sankey",
+  orientation: "h",
+  node: {
+    pad: 15,
+    thickness: 30,
+    line: {
+      color: "black",
+      width: 0.5
+    },
+    label: ["Canny",                       // 0
+      "control canny",                     // 1
+      "t2iadapter canny",                  // 2
+      "mlsd",                              // 3
+      "control mlsd",                      // 4
+      "hed",                               // 5
+      "control hed",                       // 6
+      "Scribble",                          // 7
+      "control scribble",                  // 8
+      "t2iadapter sketch",                 // 9
+      "Fake scrible",                      // 10
+      "normal map",                        // 11
+      "control normal",                    // 12
+      "binary",                            // 13
+      "color",                             // 14
+      "t2iadapter color",                  // 15
+      "openpose",                          // 16
+      "control openpose",                  // 17
+      "t2iadapter openpose",               // 18
+      "t2iadapter keypose",                // 19
+      "openpose hand",                     // 20
+      "segmentation",                      // 21
+      "control seg",                       // 22
+      "t2iadapter seg",                    // 23
+      "depth",                             // 24
+      "control depth",                     // 25
+      "t2iadapter depth",                  // 26
+      "depth leres",                       // 27
+      "depth leres boost",                 // 28
+      "pidinet",                           // 29
+      "clip vision",                       // 30
+      "t2iadapter style"],                 // 31
+    color: ["#ff8b00",
+      "#ea3323",
+      "#febb26",
+      "#ff8b00",
+      "#ea3323",
+      "#ff8b00",
+      "#ea3323",
+      "#ff8b00",
+      "#ea3323",
+      "#febb26",
+      "#ff8b00",
+      "#ea3323",
+      "#ff8b00",
+      "#ea3323",
+      "#febb26",
+      "#ff8b00",
+      "#febb26",
+      "#ea3323",
+      "#ff8b00",
+      "#ea3323",
+      "#febb26",
+      "#ff8b00",
+      "#ea3323",
+      "#ff8b00",
+      "#ea3323",
+      "#febb26",
+      "#ff8b00",
+      "#febb26",
+      "#ea3323",
+      "#ff8b00",
+      "#ea3323",
+      "#febb26",
+      "#ff8b00",
+      "#ea3323",
+      "#ff8b00",
+      "#ea3323",
+      "#febb26",
+      "#ff8b00",
+      "#febb26"]
+  },
+
+  link: {
+    source: [0, 0, 3, 5, 7, 7, 10, 10, 11, 13, 13, 14, 16, 16, 16, 20, 20, 21, 21, 24, 24, 27, 27, 28, 28, 29, 30],
+    target: [1, 2, 4, 6, 8, 9,  8,  9, 12,  8,  9, 15, 17, 18, 19, 17, 18, 22, 23, 25, 26, 25, 26, 25, 26,  6, 31],
+    value:  [5, 5, 5, 5, 5, 5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5],
+    color: ["#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253", "#1eb253"]
+  }
+};
+
+var graphDiv = document.getElementById("contentDiv");
+var graphWidth = graphDiv.clientWidth;
+
+// Define the layout
+var layout2 = {
+  paper_bgcolor: '#333',
+  plot_bgcolor: '#333',
+    font: {
+      color: "white",
+      family: 'Roboto, sans-serif'
+    },
+  width: graphWidth,
+  height: graphWidth,
+};
+</script>
+</body>
+
+    <footer>
+      <a target='_blank' id="links" href="https://www.reddit.com/user/FiacR">u/FiacR</a> - <a target='_blank' id="links" href="https://github.com/fi4cr/sdtools">fi4cre/sdtools</a> - v1.6
+    </footer>
+
+</html>

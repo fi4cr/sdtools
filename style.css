@@ -1,0 +1,99 @@
+body {
+  background-color: #333;
+  color: #fff;
+  font-family: 'Roboto', sans-serif;
+}
+
+main h2 {
+  font-size: 2em;
+  margin: 0 0 20px;
+}
+
+main p {
+  font-size: 1.2em;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.box {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  width: 1000px;
+  height: 540px;
+  border: 2px solid orange;
+  border-radius: 10px;
+}
+.box div {
+  width: 500px;
+  padding: 15px;
+  text-align: center;
+  color: #fff;
+  font-family: arial, sans-serif;
+}
+
+  /* Style the two columns */
+  .column {
+    float: left;
+    width: 49%;
+  }
+
+  /* Add a media query to change the layout on small screens */
+  @media screen and (max-width: 1200px) {
+    .column {
+      width: 100%;
+    }
+  }
+
+img {
+    width: 100%;
+    height: auto;
+}
+
+button {
+  background-color: #333;
+  color: #fff;
+  border: none;
+  padding: 30px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+  text-align: center;
+  width: 100%;
+}
+
+footer {
+  text-align: center;
+}
+
+button:hover {
+  background-color: #444;
+}
+
+button:active {
+  background-color: #222;
+}
+
+#plot {
+  margin-top: 20px;
+  margin-right: 50px;
+  margin-bottom: 20px;
+  margin-left: 50px;
+}
+
+#links {
+  color: orange;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+.container {
+  margin-top: 20px;
+  margin-right: 50px;
+  margin-bottom: 20px;
+  margin-left: 50px;
+}
