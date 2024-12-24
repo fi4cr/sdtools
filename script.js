@@ -131,8 +131,8 @@ const data2 = {
 };
 
 const layout2 = {
-    paper_bgcolor: '#333',
-    plot_bgcolor: '#333',
+    paper_bgcolor: '#1f1f1f',
+    plot_bgcolor: '#1f1f1f',
     font: {
         color: "white",
         family: CONFIG.plotly.defaultFont
@@ -184,8 +184,8 @@ class DataManager {
         return {
             margin: { l: 0, r: 0, b: 0, t: 0 },
             showlegend: false,
-            paper_bgcolor: '#333',
-            plot_bgcolor: '#333',
+            paper_bgcolor: '#1f1f1f',
+            plot_bgcolor: '#1f1f1f',
             width: width,
             height: width,
             autosize: true,
